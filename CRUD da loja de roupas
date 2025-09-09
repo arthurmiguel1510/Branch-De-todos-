@@ -1,0 +1,130 @@
+CREATE TABLE IF NOT EXISTS usuarios (
+id_usuario SERIAL PRIMARY KEY,
+nome VARCHAR(100) NOT NULL,
+email VARCHAR(100) NOT NULL,
+senha VARCHAR(255) NOT NULL,
+endereco VARCHAR(255),
+telefone VARCHAR(20),
+tipo VARCHAR(7) CHECK (tipo IN ('cliente', 'admin')) DEFAULT 'cliente',
+data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+);
+
+  
+CREATE TABLE IF NOT EXISTS categorias (
+id_categoria SERIAL PRIMARY KEY,
+nome_categoria VARCHAR(100) NOT NULL,
+descricao TEXT
+);
+
+CREATE TABLE IF NOT EXISTS produtos (
+id_produto SERIAL PRIMARY KEY,
+nome VARCHAR(150) NOT NULL,
+descricao TEXT,
+preco DECIMAL(10,2) NOT NULL,
+estoque INT DEFAULT 0,
+id_categoria INT,
+imagem VARCHAR(255),
+FOREIGN KEY (id_categoria) REFERENCES categorias(id_categoria)
+);
+  
+CREATE TABLE IF NOT EXISTS carrinho (
+id_carrinho SERIAL PRIMARY KEY,
+id_usuario INT,
+id_produto INT,
+quantidade INT DEFAULT 1,
+data_adicao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
+FOREIGN KEY (id_produto) REFERENCES produtos(id_produto)
+);
+   
+CREATE TABLE IF NOT EXISTS pedidos (
+id_pedido SERIAL PRIMARY KEY,
+id_usuario INT,
+data_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+valor_total DECIMAL(10,2),
+FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+);
+   
+CREATE TABLE IF NOT EXISTS itens_pedido (
+id_item SERIAL PRIMARY KEY,
+id_pedido INT,
+id_produto INT,
+quantidade INT NOT NULL,
+preco_unitario DECIMAL(10,2) NOT NULL,
+FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido),
+FOREIGN KEY (id_produto) REFERENCES produtos(id_produto)
+);
+   
+CREATE TABLE IF NOT EXISTS pagamentos (
+id_pagamento SERIAL PRIMARY KEY,
+id_pedido INT,
+metodo ENUM NOT NULL,
+status ENUM DEFAULT,
+data_pagamento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido)
+);
+   
+INSERT INTO usuarios (nome, email, senha, endereco, telefone)
+VALUES ('Arthur Miguel', 'arthur80@email.com', '123456', 'Rua Santa das Dores, 123', '11999999999');
+   
+INSERT INTO categorias (nome_categoria, descricao)
+VALUES ('Vestidos', 'Coleção de vestidos elegantes');
+   
+INSERT INTO produtos (nome, descricao, preco, estoque, id_categoria, imagem)
+VALUES ('Vestido Floral', 'Vestido floral leve e confortável', 129.90, 50, 1, 'vestido_floral.jpg');  
+
+INSERT INTO carrinho (id_usuario, id_produto, quantidade)
+VALUES (1, 1, 2);
+  
+INSERT INTO pedidos (id_usuario, status, valor_total)
+VALUES (1, 'pendente', 259.80);
+  
+INSERT INTO itens_pedido (id_pedido, id_produto, quantidade, preco_unitario)
+VALUES (1, 1, 2, 129.90);
+   
+INSERT INTO pagamentos (id_pedido, metodo, status)
+VALUES (1, 'cartao', 'aprovado');
+   
+SELECT * FROM produtos;
+   
+SELECT p.nome, p.preco, c.nome_categoria
+FROM produtos p
+  
+JOIN categorias c ON p.id_categoria = c.id_categoria
+WHERE c.nome_categoria = 'Vestidos';
+  
+SELECT u.nome, p.nome, c.quantidade, p.preco
+FROM carrinho c
+JOIN usuarios u ON c.id_usuario = u.id_usuario
+JOIN produtos p ON c.id_produto = p.id_produto
+WHERE u.id_usuario = 1;
+   
+SELECT p.id_pedido, p.status, p.valor_total, p.data_pedido
+FROM pedidos p
+WHERE p.id_usuario = 1;
+  
+UPDATE produtos
+SET estoque = estoque - 2
+WHERE id_produto = 1;
+   
+  
+UPDATE pedidos
+SET status = 'enviado'
+WHERE id_pedido = 1;
+   
+   
+UPDATE usuarios
+SET endereco = 'Rua Nova, 456'
+WHERE id_usuario = 1;
+   
+DELETE FROM carrinho
+WHERE id_usuario = 1 AND id_produto = 1;
+
+  
+DELETE FROM pedidos
+WHERE id_pedido = 1;
+ 
+   
+DELETE FROM usuarios
+WHERE id_usuario = 1;
+ 
