@@ -1,0 +1,127 @@
+package Model;
+
+import Db.Database;
+import java.sql.*;
+
+public class User {
+    private int id;
+    private String name;
+    private String email;
+
+    public User(int id, String name, String email) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+    }
+
+    
+    public int getId() 
+    { return id; }
+    public void setId(int id)
+    { this.id = id; }
+
+    public String getName()
+    { return name; }
+    public void setName(String name)
+    { this.name = name; }
+
+    public String getEmail() 
+    { return email; }
+
+    public void setEmail(String email) 
+    { this.email = email; }
+
+    
+    @Override
+    public String toString() {
+        return "ID: " + id + ", Nome: " + name + ", Email: " + email;
+    }
+}
+
+package Controller;
+
+import Db.Database;
+import Model.User;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class UserController {
+
+    public List<User> listarUsuarios() {
+        List<User> usuarios = new ArrayList<>();
+//try cach para lidar com possíveis exceções
+        // tenta e depois fecha a conexão
+        try (Connection conn = Database.getConnection()) {
+            String sql = "SELECT * FROM Usuario"; 
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            while (rs.next()) {
+                User u = new User(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("email")
+                );
+                usuarios.add(u);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return usuarios;
+    }
+}
+
+package Db;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class Database {
+
+    public static Connection getConnection() throws SQLException {
+        // Use local database with proper JDBC URL format
+        String host = System.getenv("PGHOST");
+        String port = System.getenv("PGPORT");
+        String database = System.getenv("PGDATABASE");
+        String user = System.getenv("PGUSER");
+        String password = System.getenv("PGPASSWORD");
+        
+        String url;
+        if (host != null && database != null && user != null && password != null) {
+            url = String.format("jdbc:postgresql://%s:%s/%s?user=%s&password=%s&sslmode=disable", 
+                              host, port != null ? port : "5432", database, user, password);
+        } else {
+            // Fallback to your external Neon database - fixed URL format
+            url = "jdbc:postgresql://ep-little-block-actj7n2n-pooler.sa-east-1.aws.neon.tech:5432/neondb?user=neondb_owner&password=npg_5xJZdP4uMScq&sslmode=require";
+        }
+
+        try {
+            Class.forName("org.postgresql.Driver"); 
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("Driver PostgreSQL não encontrado!", e);
+        }
+
+        System.out.println("Tentando conectar ao banco: " + url.replaceAll("password=[^&]*", "password=****"));
+        return DriverManager.getConnection(url);
+    }
+}
+
+package View;
+
+import Model.User;
+import java.util.List;
+
+public class UserView {
+
+    public void mostrarUsuarios(List<User> usuarios) {
+        System.out.println("=== Lista de Usuários ===");
+        for (User u : usuarios) {
+            System.out.println(u); 
+        }
+    }
+}
