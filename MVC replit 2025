@@ -38,6 +38,22 @@ public class User {
     }
 }
 
+
+package View;
+
+import Model.User;
+import java.util.List;
+
+public class UserView {
+
+    public void mostrarUsuarios(List<User> usuarios) {
+        System.out.println("=== Lista de Usuários ===");
+        for (User u : usuarios) {
+            System.out.println(u); 
+        }
+    }
+}
+
 package Controller;
 
 import Db.Database;
@@ -108,20 +124,5 @@ public class Database {
 
         System.out.println("Tentando conectar ao banco: " + url.replaceAll("password=[^&]*", "password=****"));
         return DriverManager.getConnection(url);
-    }
-}
-
-package View;
-
-import Model.User;
-import java.util.List;
-
-public class UserView {
-
-    public void mostrarUsuarios(List<User> usuarios) {
-        System.out.println("=== Lista de Usuários ===");
-        for (User u : usuarios) {
-            System.out.println(u); 
-        }
     }
 }
