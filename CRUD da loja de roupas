@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
      preco_unitario DECIMAL(10,2) NOT NULL,
      FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido),
      FOREIGN KEY (id_produto) REFERENCES produtos(id_produto)
-     );
+);
    
      CREATE TABLE IF NOT EXISTS pagamentos (
      id_pagamento SERIAL PRIMARY KEY,
@@ -63,6 +63,18 @@ CREATE TABLE IF NOT EXISTS usuarios (
      data_pagamento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
      FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido)
 );
+
+    CREATE TABLE IF NOT EXISTS status (
+    id_status SERIAL PRIMARY KEY,
+    id_pedido INT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'Pendente',
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    observacao TEXT,
+    responsavel VARCHAR(100),
+    CONSTRAINT status_check CHECK (status IN ('Pendente', 'Em Processamento', 'Enviado', 'Entregue', 'Cancelado')),
+    FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido)
+);
+     
    
      INSERT INTO usuarios (nome, email, senha, endereco, telefone)
      VALUES ('Arthur Miguel', 'arthur80@email.com', '123456', 'Rua Santa das Dores, 123', '11999999999');
@@ -83,6 +95,16 @@ CREATE TABLE IF NOT EXISTS usuarios (
    
      INSERT INTO pagamentos (id_pedido, metodo, status)
      VALUES (1, 'cartao', 'aprovado');
+
+     INSERT INTO status (id_pedido, status, observacao, responsavel) VALUES
+     (1, 'Pendente', 'Pedido recebido', 'Sistema'),
+     (1, 'Em Processamento', 'Pagamento aprovado', 'João Silva'),
+     (1, 'Em Processamento', 'Produtos separados', 'Maria Santos'),
+     (2, 'Pendente', 'Aguardando pagamento', 'Sistema'),
+     (2, 'Cancelado', 'Cliente solicitou cancelamento', 'Ana Costa')
+
+     INSERT INTO status (id_pedido, status)
+     VALUES (1, 'Enviado');
    
      SELECT * FROM produtos;
    
@@ -97,9 +119,25 @@ CREATE TABLE IF NOT EXISTS usuarios (
      JOIN produtos p ON c.id_produto = p.id_produto
      WHERE u.id_usuario = 1;
    
-     SELECT p.id_pedido, p.status, p.valor_total, p.data_pedido
+     SELECT p.id_pedido, s.status, p.valor_total, p.data_pedido
      FROM pedidos p
-     WHERE p.id_usuario = 1;
+     JOIN status s ON p.id_pedido = s.id_pedido
+     WHERE p.id_usuario = 1
+
+     SELECT * FROM status 
+     WHERE id_pedido = 1 
+     ORDER BY data_criacao DESC;
+     
+     SELECT * FROM status WHERE id_pedido = 1 ORDER BY data_criacao DESC;
+
+
+     SELECT DISTINCT ON (id_pedido) *
+     FROM status 
+     ORDER BY id_pedido, data_criacao DESC;
+
+
+     SELECT * FROM status WHERE status = 'Enviado';
+
   
      UPDATE produtos
      SET estoque = estoque - 2
@@ -114,14 +152,28 @@ CREATE TABLE IF NOT EXISTS usuarios (
      UPDATE usuarios
      SET endereco = 'Rua Nova, 456'
      WHERE id_usuario = 1;
-   
+
+     UPDATE status 
+     SET observacao = 'Produto enviado para transportadora'
+     WHERE id_status = 5;
+
+     UPDATE status
+     SET responsavel = 'Pedro Almeida'
+     WHERE id_status = 3;
+
+
      DELETE FROM carrinho
      WHERE id_usuario = 1 AND id_produto = 1;
 
   
-       DELETE FROM pedidos
-       WHERE id_pedido = 1;
+     DELETE FROM pedidos
+     WHERE id_pedido = 1;
  
    
-       DELETE FROM usuarios
-       WHERE id_usuario = 1;
+     DELETE FROM usuarios
+     WHERE id_usuario = 1;
+
+     DELETE FROM status WHERE id_status = 4;
+
+
+     DELETE FROM status WHERE id_pedido = 2;
